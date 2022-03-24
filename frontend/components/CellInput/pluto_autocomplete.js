@@ -171,7 +171,32 @@ let julia_special_completions_to_cm = (/** @type {PlutoRequestAutocomplete} */ r
 }
 
 let override_text_to_apply_in_field_expression = (text) => {
-    return !/^[@a-zA-Z_][a-zA-Z0-9!_]*\"?$/.test(text) ? (text === ":" ? `:(${text})` : `:${text}`) : null
+    // if (!/^[@a-zA-Z_][a-zA-Z0-9!_]*\"?$/.test(text)) {
+    //     return text === ":" ? `:(${text})` : `:${text}`
+    // }
+    // TODO(paul): ^^^ put back the old symbol behavior
+
+    const match = /((.*)\((.*))\) in .* at .*\.jl:\d+/.exec(text)
+    if (match !== null) {
+        return (view, completion, from, to) => {
+            const spec = {
+                changes: {
+                    from,
+                    to,
+                    insert: match[1],
+                },
+                selection: {
+                    anchor: from + match[2].length + 1,
+                    head: from + match[1].length,
+                },
+                annotations: autocomplete.pickedCompletion
+            }
+            const transaction = view.state.update(spec)
+            view.dispatch(transaction)
+        }
+    }
+
+    return text
 }
 
 /**
@@ -230,7 +255,7 @@ const julia_code_completions_to_cm = (/** @type {PlutoRequestAutocomplete} */ re
             ...results.map(([text, type_description, is_exported, is_from_notebook, completion_type, _], i) => {
                 // (quick) fix for identifiers that need to be escaped
                 // Ideally this is done with Meta.isoperator on the julia side
-                let text_to_apply = is_field_expression ? override_text_to_apply_in_field_expression(text) ?? text : text
+                let text_to_apply = override_text_to_apply_in_field_expression(text)
 
                 if (definitions.has(text)) proposed.add(text)
 

@@ -55,8 +55,19 @@ export const Cell = ({
     nbpkg,
     global_definition_locations,
 }) => {
-    const { disabled: running_disabled } = metadata
+    const { show_logs, disabled: running_disabled } = {
+        show_logs: true,
+        disabled: false,
+        ...metadata
+    }
+    console.log(metadata)
     let pluto_actions = useContext(PlutoContext)
+    const set_show_logs = (new_show_logs) => {
+        pluto_actions.update_notebook((notebook) => {
+            notebook.cell_inputs[cell_id].metadata.show_logs = new_show_logs
+        })
+    }
+
     const on_update_doc_query = pluto_actions.set_doc_query
     const on_focus_neighbor = pluto_actions.focus_on_neighbor
     const on_change = useCallback((val) => pluto_actions.set_local_cell(cell_id, val), [cell_id, pluto_actions])
@@ -64,7 +75,6 @@ export const Cell = ({
     // cm_forced_focus is null, except when a line needs to be highlighted because it is part of a stack trace
     const [cm_forced_focus, set_cm_forced_focus] = useState(null)
     const [cm_highlighted_line, set_cm_highlighted_line] = useState(null)
-    const [show_logs, set_show_logs] = useState(true)
 
     const any_logs = useMemo(() => !_.isEmpty(logs), [logs])
 

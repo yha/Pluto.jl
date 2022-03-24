@@ -348,14 +348,13 @@ export const CellInput = ({
     cell_id,
     notebook_id,
     any_logs,
-    show_logs,
     set_show_logs,
     cm_highlighted_line,
     metadata,
     global_definition_locations,
 }) => {
     let pluto_actions = useContext(PlutoContext)
-    const { disabled: running_disabled } = metadata
+    const { show_logs, disabled: running_disabled } = metadata
 
     const newcm_ref = useRef(/** @type {EditorView} */ (null))
     const dom_node_ref = useRef(/** @type {HTMLElement} */ (null))

@@ -1528,7 +1528,13 @@ only_special_completion_types(c::Completion) = nothing
 
 "You say Linear, I say Algebra!"
 function completion_fetcher(query, pos, workspace::Module)
-    results, loc, found = completions(query, pos, workspace)
+    results, loc, found = try
+        completions(query, pos, workspace)
+    catch ex
+        @info "Got completion failure for query" query text=Text(query) ex
+        rethrow()
+    end
+
     if endswith(query, '.')
         filter!(is_dot_completion, results)
         # we are autocompleting a module, and we want to see its fields alphabetically

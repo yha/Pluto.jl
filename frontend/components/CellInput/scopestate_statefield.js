@@ -149,7 +149,7 @@ let explorer_function_definition_argument = (cursor, doc, scopestate, verbose = 
         (match = match_function_definition_argument(cursor)`::${t.as("type")}`)
     ) {
         let { name, type } = match
-        if (name) scopestate = explore_pattern(name, doc, scopestate, type.to, verbose)
+        if (name) scopestate = explore_pattern(name, doc, scopestate, type?.to ?? null, verbose)
         if (type) scopestate = explore_variable_usage(type.cursor, doc, scopestate, verbose)
         return scopestate
     } else {
