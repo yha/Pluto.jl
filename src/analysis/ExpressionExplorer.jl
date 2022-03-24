@@ -944,24 +944,6 @@ end
 const can_macroexpand_no_bind = Set(Symbol.(["@md_str", "Markdown.@md_str", "@gensym", "Base.@gensym", "@enum", "Base.@enum", "@assert", "Base.@assert", "@cmd"]))
 const can_macroexpand = can_macroexpand_no_bind ∪ Set(Symbol.(["@bind", "PlutoRunner.@bind"]))
 
-macro_kwargs_as_kw(ex::Expr) = Expr(:macrocall, ex.args[1:3]..., assign_to_kw.(ex.args[4:end])...)
-
-function symbolics_mockexpand(s::Any)
-    # goofy implementation of the syntax described in https://symbolics.juliasymbolics.org/dev/manual/variables/
-    if Meta.isexpr(s, :ref, 2)
-        :($(s.args[1]) = $(s.args[2]))
-    elseif Meta.isexpr(s, :call, 2)
-        second = s.args[2] === Symbol("..") ? 123 : s.args[2]
-        :($(symbolics_mockexpand(s.args[1])); $(second) = 123)
-    elseif s isa Symbol
-        :($(s) = 123)
-    else
-        nothing
-    end
-end
-
-is_symbolics_arg(s) = symbolics_mockexpand(s) !== nothing
-
 maybe_untuple(es) =
     if length(es) == 1 && Meta.isexpr(first(es), :tuple)
         first(es).args
@@ -977,13 +959,8 @@ function maybe_macroexpand(ex::Expr; recursive::Bool=false, expand_bind::Bool=tr
         funcname = split_funcname(ex.args[1])
         funcname_joined = join_funcname_parts(funcname)
 
-        args = ex.args[3:end]
-
         if funcname_joined ∈ (expand_bind ? can_macroexpand : can_macroexpand_no_bind)
             macroexpand(PlutoRunner, ex; recursive=false)::Expr
-        elseif length(args) ≥ 2 && ex.args[1] != GlobalRef(Core, Symbol("@doc"))
-            # for macros like @test a ≈ b atol=1e-6, read assignment in 2nd & later arg as keywords
-            macro_kwargs_as_kw(ex)
         else
             ex
         end
@@ -991,7 +968,7 @@ function maybe_macroexpand(ex::Expr; recursive::Bool=false, expand_bind::Bool=tr
         ex
     end
 
-    if recursive && (result isa Expr)
+    if recursive
         # Not using broadcasting because that is expensive compilation-wise for `result.args::Any`.
         expanded = Any[]
         for arg in result.args
