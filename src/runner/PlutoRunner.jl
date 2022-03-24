@@ -16,7 +16,7 @@ using Markdown
 import Markdown: html, htmlinline, LaTeX, withtag, htmlesc
 import Distributed
 import Base64
-import FuzzyCompletions: Completion, ModuleCompletion, PropertyCompletion, FieldCompletion, PathCompletion, DictCompletion, completions, completion_text, score
+import FuzzyCompletions: REPL, Completion, BslashCompletion, ModuleCompletion, PropertyCompletion, FieldCompletion, PathCompletion, DictCompletion, completions, completion_text, score
 import Base: show, istextmime
 import UUIDs: UUID, uuid4
 import Dates: DateTime
@@ -1498,6 +1498,9 @@ catch
 end
 completion_description(::Completion) = nothing
 
+completion_detail(completion::BslashCompletion) = get(REPL.REPLCompletions.latex_symbols, completion.bslash, "")
+completion_detail(::Completion) = ""
+
 function is_pluto_workspace(m::Module)
     mod_name = nameof(m) |> string
     startswith(mod_name, "workspace#")
@@ -1542,12 +1545,13 @@ function completion_fetcher(query, pos, workspace::Module)
     end
 
     texts = completion_text.(results)
+    details = completion_detail.(results)
     descriptions = completion_description.(results)
     exported = completions_exported(results)
     from_notebook = completion_from_notebook.(results)
     completion_type = only_special_completion_types.(results)
 
-    smooshed_together = collect(zip(texts, descriptions, exported, from_notebook, completion_type))
+    smooshed_together = collect(zip(texts, descriptions, exported, from_notebook, completion_type, details))
 
     p = if endswith(query, '.')
         sortperm(smooshed_together; alg=MergeSort, by=basic_completion_priority)

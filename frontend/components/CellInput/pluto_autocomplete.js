@@ -159,9 +159,11 @@ let julia_special_completions_to_cm = (/** @type {PlutoRequestAutocomplete} */ r
         filter: false,
         // TODO Add "detail" that shows the unicode character
         // TODO Add "apply" with the unicode character so it autocompletes that immediately
-        options: results.map(([text], i) => {
+        options: results.map(([text, _, __, ___, ____, detail], i) => {
             return {
                 label: text,
+                apply: detail.length > 0 ? detail : text,
+                detail,
             }
         }),
         // TODO Do something docs_prefix ish when we also have the apply text
@@ -225,7 +227,7 @@ const julia_code_completions_to_cm = (/** @type {PlutoRequestAutocomplete} */ re
         //      If we backspace however, to `Math.a`, `a` does no longer match! So it will re-query this function.
         // span: RegExp(`^${_.escapeRegExp(ctx.state.sliceDoc(start, stop))}[^\\s"'()\\[\\].{}]*`),
         options: [
-            ...results.map(([text, type_description, is_exported, is_from_notebook, completion_type], i) => {
+            ...results.map(([text, type_description, is_exported, is_from_notebook, completion_type, _], i) => {
                 // (quick) fix for identifiers that need to be escaped
                 // Ideally this is done with Meta.isoperator on the julia side
                 let text_to_apply = is_field_expression ? override_text_to_apply_in_field_expression(text) ?? text : text
