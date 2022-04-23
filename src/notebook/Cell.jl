@@ -77,5 +77,5 @@ get_cell_metadata(cell::Cell)::Dict{String,Any} = cell.metadata
 get_cell_metadata_no_default(cell::Cell)::Dict{String,Any} = Dict{String,Any}(setdiff(pairs(cell.metadata), pairs(DEFAULT_METADATA)))
 
 "Returns whether or not the cell is **explicitely** disabled."
-is_disabled(c::Cell) = get(c.metadata, "disabled", false)
-can_show_logs(c::Cell) = get(c.metadata, "show_logs", true)
+is_disabled(c::Cell) = get(c.metadata, "disabled", DEFAULT_METADATA["disabled"])
+can_show_logs(c::Cell) = get(c.metadata, "show_logs", DEFAULT_METADATA["show_logs"])
