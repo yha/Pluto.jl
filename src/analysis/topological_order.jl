@@ -241,8 +241,12 @@ function order(topology::NotebookTopology, tree::Tree)
 
     dfs.(Iterators.reverse(tree.cell_order)) # ???
 
+    disabled = [
+        cell for (cell, node) in tree.nodes if node.disabled
+    ]
+
     ordered = reverse(exits)
-    TopologicalOrder(topology, ordered, errable)
+    TopologicalOrder(topology, ordered, errable, disabled)
 end
 
 # TODO: move somewhere relevant

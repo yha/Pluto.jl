@@ -89,15 +89,14 @@ function run_reactive_core!(
     to_run_raw = setdiff(union(new_runnable, old_runnable), keys(new_order.errable))::Vector{Cell} # TODO: think if old error cell order matters
 
     # find (indirectly) deactivated cells and update their status
-	deactivated = filter(c -> c.metadata["disabled"], notebook.cells)
-    indirectly_deactivated = collect(topological_order(new_topology, deactivated))
-    for cell in indirectly_deactivated
+    indirectly_disabled = new_order.disabled
+    for cell in indirectly_disabled
         cell.running = false
         cell.queued = false
         cell.depends_on_disabled_cells = true
     end
 
-    to_run = setdiff(to_run_raw, indirectly_deactivated)
+    to_run = setdiff(to_run_raw, indirectly_disabled)
 
     # change the bar on the sides of cells to "queued"
     for cell in to_run
